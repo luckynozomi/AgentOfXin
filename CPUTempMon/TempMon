@@ -9,16 +9,16 @@ When Temp > 80C, tweet the current temp and warn @nozomicomfy
 """
 
 from datetime import datetime
-import time, sys
+import time, sys, os
 import matplotlib.pyplot as plt
 
-time_delta = sys.argv[1]
+my_path = os.path.abspath("TempMon")
+
+time_delta = float(sys.argv[1])
 
 temp_time_list = []
 
-# check_per_day = int(24 * 60 / time_delta)
-
-check_per_day = int(1 * 60 / time_delta)
+check_per_day = int(24 * 60 / time_delta)
 
 checks = 0
 
@@ -43,13 +43,15 @@ while 1:
 
         x = range(0,len(temp_all_day))
 
-        plt.xticks(x, time_all_day)
+        plt.xticks(x, time_all_day, rotation='vertical')
 
         plt.plot(x, temp_all_day)
 
         plt_name = "CPU Temp on " + current_datetime.strftime('%b') + " " + str(current_datetime.day) + ".png"
 
-        plt.savefig("CPUTempMon/Data/" + plt_name)
+        plt.savefig(my_path + "/CPUTempMon/Data/" + plt_name)
+
+        plt.close()
 
         checks = 0
 
