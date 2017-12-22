@@ -9,7 +9,7 @@ When Temp > 80C, tweet the current temp and warn @nozomicomfy
 """
 
 from datetime import datetime
-import time, sys, os
+import time, sys, os, subprocess
 import matplotlib.pyplot as plt
 
 dir_path = os.path.abspath("CPUTempMon")
@@ -37,7 +37,7 @@ while 1:
     if checks >= check_per_day:
 
         # Print the Image
-        time_all_day = [temp_time_list[i][0] for i in xrange(0, len(temp_time_list))]
+        time_all_day = [temp_time_list[i][0][0:5] for i in xrange(0, len(temp_time_list))]
 
         temp_all_day = [temp_time_list[i][1] for i in xrange(0, len(temp_time_list))]
 
