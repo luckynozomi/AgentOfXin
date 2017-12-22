@@ -33,6 +33,13 @@ async def temp():
     await client.say(subprocess.check_output(["vcgencmd", "measure_temp"]))
 
 
+@client.command()
+async def log(*args)
+    arg = args[0]
+    if arg = temp:
+        f = open('nohup.out')
+        await client.say(f.read())
+        f.close()
 
 
 client.run(TOKEN)
