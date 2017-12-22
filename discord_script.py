@@ -13,7 +13,7 @@ client = commands.Bot(command_prefix='!')
 async def on_ready():
     print("Logged in as")
     print(client.user.name)
-
+    subprocess.call(("nohup", "CPUTempMon/TempMon", "30"))
 
 @client.command()
 async def hello():
