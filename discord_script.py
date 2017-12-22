@@ -34,9 +34,9 @@ async def temp():
 
 
 @client.command()
-async def log(*args)
+async def log(*args):
     arg = args[0]
-    if arg = temp:
+    if arg == 'temp':
         f = open('nohup.out')
         await client.say(f.read())
         f.close()
