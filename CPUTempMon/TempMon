@@ -15,21 +15,17 @@ import matplotlib.pyplot as plt
 dir_path = os.path.abspath("CPUTempMon")
 
 time_delta = float(sys.argv[1])
+check_per_day = int(24 * 60 / time_delta)
+checks = 0
 
 temp_time_list = []
-
-check_per_day = int(24 * 60 / time_delta)
-
-checks = 0
 
 while 1:
 
     current_datetime = datetime.now()
 
     temp = subprocess.check_output(["vcgencmd", "measure_temp"])
-
     temp = float(temp[5:9])
-
     temp_time_list.append([current_datetime.strftime('%X'), temp])
 
     checks = checks + 1
@@ -38,23 +34,16 @@ while 1:
 
         # Print the Image
         time_all_day = [temp_time_list[i][0][0:5] for i in xrange(0, len(temp_time_list))]
-
         temp_all_day = [temp_time_list[i][1] for i in xrange(0, len(temp_time_list))]
 
         x = range(0,len(temp_all_day))
-
         plt.xticks(x, time_all_day, rotation='vertical')
-
         plt.plot(x, temp_all_day)
-
         plt_name = "CPU Temp on " + current_datetime.strftime('%b') + " " + str(current_datetime.day) + ".png"
-
         plt.savefig(dir_path + "/Data/" + plt_name)
-
         plt.close()
 
         checks = 0
-
         temp_time_list = []
 
     time.sleep(time_delta * 60)
