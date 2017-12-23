@@ -57,6 +57,6 @@ if hazards.hasChildNodes() == True:
     hazard_URL = hazard_URL[0].childNodes[0].nodeValue
 
     print("There is a " + hazard_type + " " + phenomena + " hazard " + significance + " in your area")
-    print("visit" + hazard_URL "for detailed info.")
+    print("visit" + hazard_URL + "for detailed info.")
 
 vals.unlink()
