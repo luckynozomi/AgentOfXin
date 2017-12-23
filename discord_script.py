@@ -42,5 +42,9 @@ async def log(*args):
         await client.say(f.read())
         f.close()
 
+@client.command()
+async def weather(*args):
+    arg = args[0]
+    await client.say(subprocess.check_output(["python", "weather.py", arg]))
 
 client.run(TOKEN)

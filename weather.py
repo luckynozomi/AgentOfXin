@@ -41,7 +41,7 @@ high_temp = float(temp[0].childNodes[0].nodeValue)
 low_temp = float(temp[1].childNodes[0].nodeValue)
 prob = float(temp[2].childNodes[0].nodeValue)
 
-print("Today, high temp is", high_temp, "F, low temp is", low_temp, "F, with a ", prob, "chance of raining")
+print("Today, high temp is", high_temp, "F, low temp is", low_temp, "F, with a", prob, "chance of raining")
 
 hazards = vals.getElementsByTagName("hazard-conditions")
 hazards = hazards[0]
@@ -57,5 +57,6 @@ if hazards.hasChildNodes() == True:
     hazard_URL = hazard_URL[0].childNodes[0].nodeValue
 
     print("There is a " + hazard_type + " " + phenomena + " hazard " + significance + " in your area")
+    print("visit" + hazard_URL "for detailed info.")
 
 vals.unlink()
