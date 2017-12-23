@@ -8,6 +8,7 @@ When Temp > 80C, tweet the current temp and warn @nozomicomfy
 
 """
 
+
 from datetime import datetime
 import time, sys, os, subprocess
 import matplotlib.pyplot as plt
