@@ -13,7 +13,7 @@ client = commands.Bot(command_prefix='!')
 async def on_ready():
     print("Logged in as")
     print(client.user.name)
-    subprocess.call(("python", "CPUTempMon/TempMon", "30"))
+    subprocess.call(("python3", "CPUTempMon/TempMon", "30"))
 
 
 @client.command()
@@ -45,6 +45,6 @@ async def log(*args):
 @client.command()
 async def weather(*args):
     arg = args[0]
-    await client.say(subprocess.check_output(["python", "weather.py", arg]))
+    await client.say(subprocess.check_output(["python3", "weather.py", arg]))
 
 client.run(TOKEN)
