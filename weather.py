@@ -3,6 +3,15 @@ from xml.dom.minidom import parseString
 from datetime import datetime
 import datetime as dt
 import sys
+import aiohttp
+import asyncio
+import async_timeout
+
+
+async def fetch(session, url):
+    with async_timeout.timeout(20):
+        async with session.get(url) as response:
+            return response.status, await response.text()
 
 
 
@@ -71,18 +80,27 @@ class WeatherForecast:
         self.hazard_sign = None
         self.hazard_type = None
         self.hazard_URL = None
+        self.forecast_URL = time_and_zip.get_URL()
+        self.trials = trials
+        self.forecast = None
 
         self.server_res_code = 504
-        while trials > 0 and self.server_res_code != 200:
-            self.forecast = requests.get(time_and_zip.get_URL())
-            self.server_res_code = self.forecast.status_code
 
-        if trials == 0:
+    async def fetch_forecast(self):
+
+        trial = 1
+
+        while trial <= self.trials and self.server_res_code != 200:
+
+            async with aiohttp.ClientSession() as session:
+                [self.server_res_code, self.forecast] = await fetch(session, self.forecast_URL)
+
+        if trial >= self.trials:
             raise ConnectionError
 
     def weather_condition(self):
 
-        vals = parseString(self.forecast.text)
+        vals = parseString(self.forecast)
 
         temp = vals.getElementsByTagName("value")
         self.high_temp = float(temp[0].childNodes[0].nodeValue)
@@ -93,7 +111,7 @@ class WeatherForecast:
 
     def hazard_condition(self):
 
-        vals = parseString(self.forecast.text)
+        vals = parseString(self.forecast)
 
         hazards = vals.getElementsByTagName("hazard-conditions")
         hazards = hazards[0]
@@ -112,8 +130,9 @@ class WeatherForecast:
         vals.unlink()
 
 
-    def report_weather(self):
+    async def report_weather(self):
 
+        await self.fetch_forecast()
         self.weather_condition()
         self.hazard_condition()
 
@@ -125,12 +144,15 @@ class WeatherForecast:
             print("visit" + self.hazard_URL + "for detailed info.")
 
 
-if __name__ == "__main__":
+async def main():
 
     current_datetime = datetime.now()
 
-    time_and_zip = TimeAndZip(current_datetime)
+    time_and_zipp = TimeAndZip(current_datetime)
 
-    test = WeatherForecast(time_and_zip.next_day())
+    test = WeatherForecast(time_and_zipp.next_day())
 
-    test.report_weather()
+    await test.report_weather()
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
