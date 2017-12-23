@@ -2,10 +2,12 @@ import requests
 from xml.dom.minidom import parseString
 from datetime import datetime
 import datetime as dt
+import sys
 
 FORECAST_RANGE = dt.timedelta(hours=12)
 #ZIP_CODE = '04005'
-ZIP_CODE = '32304'
+#ZIP_CODE = '32304'
+ZIP_CODE = sys.argv[1]
 
 current_datetime = datetime.now()
 forecast_datetime = current_datetime
@@ -47,11 +49,13 @@ hazards = hazards[0]
 if hazards.hasChildNodes() == True:
 
     hazard_info = hazards.getElementsByTagName("hazard")[0]
-    phenomena = hazard_info.attributes['phenomena'].nodeValue
-    significance = hazard_info.attributes['significance'].nodeValue
-    hazard_type = hazard_info.attributes['hazardType'].nodeValue
+    phenomena = hazard_info.attributes['phenomena'].nodeValue # "Winter Weather"
+    significance = hazard_info.attributes['significance'].nodeValue # "Advisory"
+    hazard_type = hazard_info.attributes['hazardType'].nodeValue # "long duration"
 
     hazard_URL = hazards.getElementsByTagName("hazardTextURL")
     hazard_URL = hazard_URL[0].childNodes[0].nodeValue
+
+    print("There is a " + hazard_type + " " + phenomena + " hazard " + significance + " in your area")
 
 vals.unlink()
