@@ -40,6 +40,18 @@ class TimeAndZip:
 
         return URL
 
+    def next_day(self):
+
+        forecast_datetime = self.datetime
+
+        if self.datetime.hour > 19:
+            delta = dt.timedelta(days=1)
+            forecast_datetime = self.datetime + delta
+
+        forecast_datetime = forecast_datetime.replace(hour=7, minute=0, second=0, microsecond=0)
+
+        return TimeAndZip(datetime=forecast_datetime, zipcode=self.zipcode)
+
 
 class WeatherForecast:
 
@@ -117,14 +129,8 @@ if __name__ == "__main__":
 
     current_datetime = datetime.now()
 
-    if current_datetime.hour > 19:
-        delta = dt.timedelta(days=1)
-        current_datetime = current_datetime + delta
+    time_and_zip = TimeAndZip(current_datetime)
 
-    forecast_datetime = current_datetime.replace(hour=7, minute=0, second=0, microsecond=0)
-
-    time_and_zip = TimeAndZip(forecast_datetime)
-
-    test = WeatherForecast(time_and_zip)
+    test = WeatherForecast(time_and_zip.next_day())
 
     test.report_weather()
