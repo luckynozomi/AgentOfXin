@@ -14,7 +14,6 @@ async def fetch(session, url):
             return response.status, await response.text()
 
 
-
 class TimeAndZip:
 
     def __init__(self, datetime=datetime.now(), duration=dt.timedelta(hours=12), zipcode='32304'):
@@ -33,7 +32,6 @@ class TimeAndZip:
             raise ValueError
 
         self.zipcode = zipcode
-
 
     def get_URL(self):
         """
@@ -83,8 +81,9 @@ class WeatherForecast:
         self.forecast_URL = time_and_zip.get_URL()
         self.trials = trials
         self.forecast = None
-
         self.server_res_code = 504
+
+        print(self.forecast_URL)
 
     async def fetch_forecast(self):
 
@@ -129,7 +128,6 @@ class WeatherForecast:
 
         vals.unlink()
 
-
     async def report_weather(self):
 
         await self.fetch_forecast()
@@ -143,6 +141,8 @@ class WeatherForecast:
             print("There is a " + self.hazard_type + " " + self.phenomena + " hazard " + self.significance + " in your area")
             print("visit" + self.hazard_URL + "for detailed info.")
 
+            await asyncio.sleep(10)
+
 
 async def main():
 
@@ -154,5 +154,8 @@ async def main():
 
     await test.report_weather()
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
+if __name__ == "__main__":
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
+
