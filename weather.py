@@ -141,8 +141,6 @@ class WeatherForecast:
             print("There is a " + self.hazard_type + " " + self.phenomena + " hazard " + self.significance + " in your area")
             print("visit" + self.hazard_URL + "for detailed info.")
 
-            await asyncio.sleep(10)
-
 
 async def main():
 
