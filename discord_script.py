@@ -15,6 +15,7 @@ async def on_ready():
     print(client.user.name)
     subprocess.call(("nohup", "CPUTempMon/TempMon", "30"))
 
+
 @client.command()
 async def hello():
     await client.say("Hello")
