@@ -31,7 +31,7 @@ async def check_weather_daily():
 
         weather = WeatherForecast(curr_time_and_zip)
         await weather.report_weather()
-        await client.say("Current Temp in " + str(time_and_zip.zipcode) + " is " + str(weather.low_temp) + "to" +
+        await client.say("Current Temp in " + str(curr_time_and_zip.zipcode) + " is " + str(weather.low_temp) + "to" +
                          str(weather.high_temp) + " degrees F, with " + str(weather.precipitation) +
                          "% chance of precipitation.")
         next_time_and_zip = curr_time_and_zip.next_day()
@@ -51,7 +51,7 @@ async def hello():
 
 
 @client.command()
-async def exec(*args):
+async def exe(*args):
 
     try:
         await client.say(subprocess.check_output(args))
@@ -82,7 +82,7 @@ async def weather(*args):
     chk_weather = WeatherForecast(time_and_zip.next_day())
     await chk_weather.report_weather()
     await client.say("Current Temp in " + str(time_and_zip.zipcode) + " is " + str(chk_weather.low_temp) + " to " +
-                     str(chk_weather.high_temp) + " degrees F, with "+ str(chk_weather.precipitation) +
+                     str(chk_weather.high_temp) + " degrees F, with " + str(chk_weather.precipitation) +
                      "% chance of precipitation.")
 
 client.loop.create_task(check_weather_daily())
