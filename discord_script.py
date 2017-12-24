@@ -1,16 +1,40 @@
-import discord
-import asyncio
 from discord.ext import commands
-import platform
 from discord_token import *
 import subprocess
-import sys
 
-from weather import *
+from WeatherForecast.weather import *
 
 CHANNEL_ID = '354808585374531604'
 
 client = commands.Bot(command_prefix='!')
+
+
+async def check_weather_daily():
+
+    await client.wait_until_ready()
+
+    curr_time_and_zip = TimeAndZip()
+
+    if curr_time_and_zip.datetime.hour < 7:
+        next_time_and_zip = curr_time_and_zip
+        next_time_and_zip.datetime.replace(hour=7, minute=0, second=0, microsecond=0)
+    else:
+        next_time_and_zip = curr_time_and_zip.next_day()
+
+    while True:
+
+        timedelta = next_time_and_zip.datetime - curr_time_and_zip.datetime
+
+        await asyncio.sleep(timedelta.total_seconds())
+
+        curr_time_and_zip = next_time_and_zip
+
+        weather = WeatherForecast(curr_time_and_zip)
+        await weather.report_weather()
+        await client.say("Current Temp in " + str(time_and_zip.zipcode) + " is " + str(weather.low_temp) + "to" +
+                         str(weather.high_temp) + " degrees F, with " + str(weather.precipitation) +
+                         "% chance of precipitation.")
+        next_time_and_zip = curr_time_and_zip.next_day()
 
 
 @client.event
@@ -55,8 +79,11 @@ async def log(*args):
 async def weather(*args):
 
     time_and_zip = TimeAndZip(zipcode=args[0]).next_day()
-    test = WeatherForecast(time_and_zip.next_day())
-    await test.report_weather()
+    chk_weather = WeatherForecast(time_and_zip.next_day())
+    await chk_weather.report_weather()
+    await client.say("Current Temp in " + str(time_and_zip.zipcode) + " is " + str(chk_weather.low_temp) + " to " +
+                     str(chk_weather.high_temp) + " degrees F, with "+ str(chk_weather.precipitation) +
+                     "% chance of precipitation.")
 
-
+client.loop.create_task(check_weather_daily())
 client.run(TOKEN)

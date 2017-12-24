@@ -9,9 +9,8 @@ import async_timeout
 
 
 async def fetch(session, url):
-    with async_timeout.timeout(20):
-        async with session.get(url) as response:
-            return response.status, await response.text()
+    async with session.get(url) as response:
+        return response.status, await response.text()
 
 
 class TimeAndZip:
@@ -49,11 +48,7 @@ class TimeAndZip:
 
     def next_day(self):
 
-        forecast_datetime = self.datetime
-
-        if self.datetime.hour > 19:
-            delta = dt.timedelta(days=1)
-            forecast_datetime = self.datetime + delta
+        forecast_datetime = self.datetime + dt.timedelta(days=1)
 
         forecast_datetime = forecast_datetime.replace(hour=7, minute=0, second=0, microsecond=0)
 
@@ -140,6 +135,18 @@ class WeatherForecast:
 
             print("There is a " + self.hazard_type + " " + self.phenomena + " hazard " + self.significance + " in your area")
             print("visit" + self.hazard_URL + "for detailed info.")
+
+
+async def temp_alert(weather_past, weather_now):
+
+    if weather_now.high_temp - 10.0 > weather_past.high_temp or weather_now.low_temp - 10.0 > weather_past.low_temp:
+        temp_alert = "warmer"
+    elif weather_now.high_temp + 10.0 < weather_past.high_temp or weather_now.low_temp + 10.0 < weather_past.low_temp:
+        temp_alert = "cooler"
+    else:
+        temp_alert = "None"
+
+    return temp_alert
 
 
 async def main():
