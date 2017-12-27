@@ -51,9 +51,15 @@ class TimeAndZip:
               "&product=time-series&begin=" + self.datetime.isoformat() + "&end=" + \
               self._datetime_end.isoformat() + "&maxt=maxt&mint=mint&pop12=pop12&wwa=wwa"
 
+        print(url)
         return url
 
-    def forecast_datetime(self, day_delta=0):
+    def day_lapse(self, day_delta=0):
+        """
+
+        :param day_delta: int
+        :return: TimeAndZip object whose time is X days after today at 7 AM.
+        """
 
         forecast_datetime = self.datetime + dt.timedelta(days=day_delta)
 
@@ -61,10 +67,53 @@ class TimeAndZip:
 
         return TimeAndZip(datetime=forecast_datetime, zipcode=self.zipcode)
 
+    async def _dl_forecast(self, trials=5):
+        """
+
+        :param trials: int
+        :return: forecast XML file
+        """
+
+        trial = 1
+        server_res_code = None
+        forecast = None
+
+        while trial <= trials and server_res_code != 200:
+            async with aiohttp.ClientSession() as session:
+                [server_res_code, forecast] = await fetch(session, self.get_url())
+
+        if trial >= trials:
+            raise ConnectionError
+
+        return forecast
+
+    async def fetch_forecast(self, trials = 5):
+
+        path = "WeatherForecast/log/" + self.zipcode + "/"
+
+        if os.path.isfile(path + self.datetime.date().isoformat()) is True:
+
+            f = open(path + self.datetime.date().isoformat(), 'r')
+            forecast = f.read()
+            f.close()
+            print("Opened File.")
+
+        else:
+
+            forecast = await self._dl_forecast()
+            print("Downloaded file.")
+
+            make_sure_path_exists(path)
+            f = open(path + self.datetime.date().isoformat(), 'w')
+            f.write(forecast)
+            f.close()
+
+        return forecast
+
 
 class WeatherForecast:
 
-    def __init__(self, time_and_zip, trials=5):
+    def __init__(self, xml):
         """
 
         :param time_and_zip: TimeAndZip object
@@ -72,64 +121,12 @@ class WeatherForecast:
 
         """
 
-        self.high_temp = None
-        self.low_temp = None
-        self.precipitation = None
-        self.hazard_flag = False
-        self.hazard_pheno = None
-        self.hazard_sign = None
-        self.hazard_type = None
-        self.hazard_url = None
-        self.time_and_zip = time_and_zip
-        self.forecast_url = time_and_zip.get_url()
-        self.trials = trials
-        self.forecast = None
-        self.server_res_code = 504
-
-        print(self.forecast_url)
-
-    async def fetch_forecast(self):
-
-        path = "WeatherForecast/log/" + self.time_and_zip.zipcode + "/"
-
-        if os.path.isfile(path + self.time_and_zip.datetime.date().isoformat()) is True:
-
-            f = open(path + self.time_and_zip.datetime.date().isoformat(), 'r')
-            self.forecast = f.read()
-            f.close()
-            print("Opened File.")
-
-        else:
-
-            trial = 1
-
-            while trial <= self.trials and self.server_res_code != 200:
-
-                async with aiohttp.ClientSession() as session:
-                    [self.server_res_code, self.forecast] = await fetch(session, self.forecast_url)
-
-            if trial >= self.trials:
-                raise ConnectionError
-
-            print("Downloaded file.")
-
-    def weather_condition(self):
-
-        vals = parseString(self.forecast)
-
-        path = "WeatherForecast/log/" + self.time_and_zip.zipcode + "/"
-        make_sure_path_exists(path)
-
-        f = open(path + self.time_and_zip.datetime.date().isoformat(), 'w')
-        f.write(self.forecast)
-        f.close()
+        vals = parseString(xml)
 
         temp = vals.getElementsByTagName("value")
         self.high_temp = float(temp[0].childNodes[0].nodeValue)
         self.low_temp = float(temp[1].childNodes[0].nodeValue)
         self.precipitation = float(temp[2].childNodes[0].nodeValue)
-
-        vals = parseString(self.forecast)
 
         hazards = vals.getElementsByTagName("hazard-conditions")
         hazards = hazards[0]
@@ -147,10 +144,14 @@ class WeatherForecast:
 
         vals.unlink()
 
-    async def report_weather(self):
+    async def report(self, dest="stdio"):
 
-        await self.fetch_forecast()
-        self.weather_condition()
+        if dest == "stdio":
+            self._report_stdio()
+        else:
+            raise NotImplementedError
+
+    def _report_stdio(self):
 
         print("Today, high temp is", self.high_temp, "F, low temp is", self.low_temp, "F, with a", self.precipitation,
               "chance of raining")
@@ -180,9 +181,11 @@ async def main():
 
     time_and_zipp = TimeAndZip(current_datetime)
 
-    test = WeatherForecast(time_and_zipp.forecast_datetime(day_delta=0))
+    xml = await time_and_zipp.fetch_forecast()
 
-    await test.report_weather()
+    forecast = WeatherForecast(xml=xml)
+
+    await forecast.report()
 
 if __name__ == "__main__":
 
