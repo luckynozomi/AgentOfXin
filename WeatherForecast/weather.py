@@ -1,11 +1,18 @@
-import requests
 from xml.dom.minidom import parseString
 from datetime import datetime
 import datetime as dt
-import sys
 import aiohttp
 import asyncio
-import async_timeout
+import os
+import errno
+
+
+def make_sure_path_exists(path):
+    try:
+        os.makedirs(path)
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
 
 
 async def fetch(session, url):
@@ -32,23 +39,23 @@ class TimeAndZip:
 
         self.zipcode = zipcode
 
-    def get_URL(self):
+    def get_url(self):
         """
 
         :return: string
 
         """
 
-        URL = "https://graphical.weather.gov" + \
+        url = "https://graphical.weather.gov" + \
               "/xml/sample_products/browser_interface/ndfdXMLclient.php?zipCodeList=" + self.zipcode + \
               "&product=time-series&begin=" + self.datetime.isoformat() + "&end=" + \
               self._datetime_end.isoformat() + "&maxt=maxt&mint=mint&pop12=pop12&wwa=wwa"
 
-        return URL
+        return url
 
-    def next_day(self):
+    def forecast_datetime(self, day_delta=0):
 
-        forecast_datetime = self.datetime + dt.timedelta(days=1)
+        forecast_datetime = self.datetime + dt.timedelta(days=day_delta)
 
         forecast_datetime = forecast_datetime.replace(hour=7, minute=0, second=0, microsecond=0)
 
@@ -72,38 +79,55 @@ class WeatherForecast:
         self.hazard_pheno = None
         self.hazard_sign = None
         self.hazard_type = None
-        self.hazard_URL = None
-        self.forecast_URL = time_and_zip.get_URL()
+        self.hazard_url = None
+        self.time_and_zip = time_and_zip
+        self.forecast_url = time_and_zip.get_url()
         self.trials = trials
         self.forecast = None
         self.server_res_code = 504
 
-        print(self.forecast_URL)
+        print(self.forecast_url)
 
     async def fetch_forecast(self):
 
-        trial = 1
+        path = "WeatherForecast/log/" + self.time_and_zip.zipcode + "/"
 
-        while trial <= self.trials and self.server_res_code != 200:
+        if os.path.isfile(path + self.time_and_zip.datetime.date().isoformat()) is True:
 
-            async with aiohttp.ClientSession() as session:
-                [self.server_res_code, self.forecast] = await fetch(session, self.forecast_URL)
+            f = open(path + self.time_and_zip.datetime.date().isoformat(), 'r')
+            self.forecast = f.read()
+            f.close()
+            print("Opened File.")
 
-        if trial >= self.trials:
-            raise ConnectionError
+        else:
+
+            trial = 1
+
+            while trial <= self.trials and self.server_res_code != 200:
+
+                async with aiohttp.ClientSession() as session:
+                    [self.server_res_code, self.forecast] = await fetch(session, self.forecast_url)
+
+            if trial >= self.trials:
+                raise ConnectionError
+
+            print("Downloaded file.")
 
     def weather_condition(self):
 
         vals = parseString(self.forecast)
 
+        path = "WeatherForecast/log/" + self.time_and_zip.zipcode + "/"
+        make_sure_path_exists(path)
+
+        f = open(path + self.time_and_zip.datetime.date().isoformat(), 'w')
+        f.write(self.forecast)
+        f.close()
+
         temp = vals.getElementsByTagName("value")
         self.high_temp = float(temp[0].childNodes[0].nodeValue)
         self.low_temp = float(temp[1].childNodes[0].nodeValue)
         self.precipitation = float(temp[2].childNodes[0].nodeValue)
-
-        vals.unlink()
-
-    def hazard_condition(self):
 
         vals = parseString(self.forecast)
 
@@ -114,12 +138,12 @@ class WeatherForecast:
 
         if self.hazard_flag is True:
             hazard_info = hazards.getElementsByTagName("hazard")[0]
-            self.phenomena = hazard_info.attributes['phenomena'].nodeValue  # "Winter Weather"
-            self.significance = hazard_info.attributes['significance'].nodeValue  # "Advisory"
+            self.hazard_pheno = hazard_info.attributes['phenomena'].nodeValue  # "Winter Weather"
+            self.hazard_sign = hazard_info.attributes['significance'].nodeValue  # "Advisory"
             self.hazard_type = hazard_info.attributes['hazardType'].nodeValue  # "long duration"
 
-            hazard_URL = hazards.getElementsByTagName("hazardTextURL")
-            self.hazard_URL = hazard_URL[0].childNodes[0].nodeValue
+            hazard_url = hazards.getElementsByTagName("hazardTextURL")
+            self.hazard_url = hazard_url[0].childNodes[0].nodeValue
 
         vals.unlink()
 
@@ -127,14 +151,15 @@ class WeatherForecast:
 
         await self.fetch_forecast()
         self.weather_condition()
-        self.hazard_condition()
 
-        print("Today, high temp is", self.high_temp, "F, low temp is", self.low_temp, "F, with a", self.precipitation, "chance of raining")
+        print("Today, high temp is", self.high_temp, "F, low temp is", self.low_temp, "F, with a", self.precipitation,
+              "chance of raining")
 
         if self.hazard_flag is True:
 
-            print("There is a " + self.hazard_type + " " + self.phenomena + " hazard " + self.significance + " in your area")
-            print("visit" + self.hazard_URL + "for detailed info.")
+            print("There is a " + self.hazard_type + " " + self.hazard_pheno + " hazard " + self.hazard_sign +
+                  " in your area")
+            print("visit" + self.hazard_url + "for detailed info.")
 
 
 async def temp_alert(weather_past, weather_now):
@@ -155,7 +180,7 @@ async def main():
 
     time_and_zipp = TimeAndZip(current_datetime)
 
-    test = WeatherForecast(time_and_zipp.next_day())
+    test = WeatherForecast(time_and_zipp.forecast_datetime(day_delta=0))
 
     await test.report_weather()
 
@@ -163,4 +188,3 @@ if __name__ == "__main__":
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
-
