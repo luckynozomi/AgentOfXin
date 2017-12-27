@@ -145,13 +145,13 @@ class WeatherForecast:
 
     async def report(self, zipcode, date, func=print):
 
-        func("On " + date + " in " + zipcode + ", high temp is " + str(self.high_temp) + " degrees F, low temp is " +
-             str(self.low_temp) + " degrees F, with a " + str(self.precipitation) + "% chance of precipitation")
+        await func("On " + date + " in " + zipcode + ", high temp is " + str(self.high_temp) + " degrees F, low temp is " +
+              str(self.low_temp) + " degrees F, with a " + str(self.precipitation) + "% chance of precipitation")
 
         if self.hazard_flag is True:
-            func("There is a " + self.hazard_type + " " + self.hazard_pheno + " hazard " + self.hazard_sign +
-                 " in your area.")
-            func("visit" + self.hazard_url + "for detailed info.")
+            print("There is a " + self.hazard_type + " " + self.hazard_pheno + " hazard " + self.hazard_sign +
+                  " in your area.")
+            print("visit" + self.hazard_url + "for detailed info.")
 
 
 async def temp_alert(weather_past, weather_now):
