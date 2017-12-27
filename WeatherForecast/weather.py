@@ -87,7 +87,7 @@ class TimeAndZip:
 
         return forecast
 
-    async def fetch_forecast(self, trials = 5):
+    async def fetch_forecast(self, trials=5):
 
         path = "WeatherForecast/log/" + self.zipcode + "/"
 
@@ -100,7 +100,7 @@ class TimeAndZip:
 
         else:
 
-            forecast = await self._dl_forecast()
+            forecast = await self._dl_forecast(trials=trials)
             print("Downloaded file.")
 
             make_sure_path_exists(path)
@@ -146,24 +146,24 @@ class WeatherForecast:
     async def report(self, zipcode, date, func=print):
 
         func("On " + date + " in " + zipcode + ", high temp is " + str(self.high_temp) + " degrees F, low temp is " +
-              str(self.low_temp) + " degrees F, with a " + str(self.precipitation) + "% chance of precipitation")
+             str(self.low_temp) + " degrees F, with a " + str(self.precipitation) + "% chance of precipitation")
 
         if self.hazard_flag is True:
             func("There is a " + self.hazard_type + " " + self.hazard_pheno + " hazard " + self.hazard_sign +
-                  " in your area")
+                 " in your area.")
             func("visit" + self.hazard_url + "for detailed info.")
 
 
 async def temp_alert(weather_past, weather_now):
 
     if weather_now.high_temp - 10.0 > weather_past.high_temp or weather_now.low_temp - 10.0 > weather_past.low_temp:
-        temp_alert = "warmer"
+        alert = "warmer"
     elif weather_now.high_temp + 10.0 < weather_past.high_temp or weather_now.low_temp + 10.0 < weather_past.low_temp:
-        temp_alert = "cooler"
+        alert = "cooler"
     else:
-        temp_alert = "None"
+        alert = "None"
 
-    return temp_alert
+    return alert
 
 
 async def main():
