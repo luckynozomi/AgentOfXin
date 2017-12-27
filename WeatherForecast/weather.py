@@ -116,8 +116,7 @@ class WeatherForecast:
     def __init__(self, xml):
         """
 
-        :param time_and_zip: TimeAndZip object
-        :param trials: number of attempts to reach server
+        :param xml: xml file containing weather forecast
 
         """
 
@@ -144,23 +143,15 @@ class WeatherForecast:
 
         vals.unlink()
 
-    async def report(self, dest="stdio"):
+    async def report(self, zipcode, date, func=print):
 
-        if dest == "stdio":
-            self._report_stdio()
-        else:
-            raise NotImplementedError
-
-    def _report_stdio(self):
-
-        print("Today, high temp is", self.high_temp, "F, low temp is", self.low_temp, "F, with a", self.precipitation,
-              "chance of raining")
+        func("On " + date + " in " + zipcode + ", high temp is " + str(self.high_temp) + " degrees F, low temp is " +
+              str(self.low_temp) + " degrees F, with a " + str(self.precipitation) + "% chance of precipitation")
 
         if self.hazard_flag is True:
-
-            print("There is a " + self.hazard_type + " " + self.hazard_pheno + " hazard " + self.hazard_sign +
+            func("There is a " + self.hazard_type + " " + self.hazard_pheno + " hazard " + self.hazard_sign +
                   " in your area")
-            print("visit" + self.hazard_url + "for detailed info.")
+            func("visit" + self.hazard_url + "for detailed info.")
 
 
 async def temp_alert(weather_past, weather_now):
@@ -185,7 +176,7 @@ async def main():
 
     forecast = WeatherForecast(xml=xml)
 
-    await forecast.report()
+    await forecast.report(zipcode='32304', date=current_datetime.date().isoformat())
 
 if __name__ == "__main__":
 
