@@ -1,11 +1,11 @@
 from discord.ext import commands
 from discord_token import *
 import subprocess
+import sys
 
 from WeatherForecast.weather import *
 
 CHANNEL_ID = '354808585374531604'
-
 client = commands.Bot(command_prefix='!')
 
 
@@ -16,10 +16,9 @@ async def check_weather_daily():
     curr_time_and_zip = TimeAndZip()
 
     if curr_time_and_zip.datetime.hour < 7:
-        next_time_and_zip = curr_time_and_zip
-        next_time_and_zip.datetime.replace(hour=7, minute=0, second=0, microsecond=0)
+        next_time_and_zip = curr_time_and_zip.day_lapse(day_delta=0)
     else:
-        next_time_and_zip = curr_time_and_zip.next_day()
+        next_time_and_zip = curr_time_and_zip.day_lapse(day_delta=1)
 
     while True:
 
@@ -29,11 +28,10 @@ async def check_weather_daily():
 
         curr_time_and_zip = next_time_and_zip
 
-        weather = WeatherForecast(curr_time_and_zip)
-        await weather.report_weather()
-        await client.say("Current Temp in " + str(curr_time_and_zip.zipcode) + " is " + str(weather.low_temp) + "to" +
-                         str(weather.high_temp) + " degrees F, with " + str(weather.precipitation) +
-                         "% chance of precipitation.")
+        xml = await curr_time_and_zip.fetch_forecast()
+        forecast = WeatherForecast(xml=xml)
+        await forecast.report(zipcode=curr_time_and_zip.zipcode, date=curr_time_and_zip.datetime.date().isoformat(),
+                              func=client.say)
         next_time_and_zip = curr_time_and_zip.next_day()
 
 
@@ -78,12 +76,14 @@ async def log(*args):
 @client.command()
 async def weather(*args):
 
-    time_and_zip = TimeAndZip(zipcode=args[0]).next_day()
-    chk_weather = WeatherForecast(time_and_zip.next_day())
-    await chk_weather.report_weather()
-    await client.say("Current Temp in " + str(time_and_zip.zipcode) + " is " + str(chk_weather.low_temp) + " to " +
-                     str(chk_weather.high_temp) + " degrees F, with " + str(chk_weather.precipitation) +
-                     "% chance of precipitation.")
+    day_delta = 1
+    if datetime.now().hour < 19:
+        day_delta = 0
+
+    time_and_zip = TimeAndZip(zipcode=args[0]).day_lapse(day_delta=day_delta)
+    xml = await time_and_zip.fetch_forecast()
+    forecast = WeatherForecast(xml=xml)
+    await forecast.report(zipcode=args[0], date=time_and_zip.datetime.date().isoformat(), func=client.say)
 
 client.loop.create_task(check_weather_daily())
 client.run(TOKEN)
