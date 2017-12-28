@@ -4,6 +4,7 @@ import subprocess
 import sys
 
 from WeatherForecast.weather import *
+from WeatherForecast.tweet_alert import *
 
 client = commands.Bot(command_prefix='!')
 CHANNEL = client.get_channel('354808585374531604')
@@ -37,7 +38,7 @@ async def check_weather_daily():
 
         timedelta = next_time_and_zip.datetime - curr_time_and_zip.datetime
 
-        await asyncio.sleep(timedelta.total_seconds())
+        # await asyncio.sleep(timedelta.total_seconds())
 
         curr_time_and_zip = next_time_and_zip
 
@@ -47,8 +48,10 @@ async def check_weather_daily():
                               func=printdiscord)
         await forecast.report_alert(zipcode=curr_time_and_zip.zipcode,
                                     date=curr_time_and_zip.datetime.date().isoformat(),
-                                    func=printdiscord)
+                                    func=twitter_update_status)
         next_time_and_zip = curr_time_and_zip.day_lapse(day_delta=1)
+
+        await asyncio.sleep(4564652)
 
 
 @client.event

@@ -156,8 +156,7 @@ class ParseForecast:
 
         if self.hazard_flag is True:
             await func("There is a " + self.hazard_type + " " + self.hazard_pheno + " hazard " + self.hazard_sign +
-                       " in your area.")
-            await func("visit" + self.hazard_url + "for detailed info.")
+                       " in your area. Visit " + self.hazard_url + "for detailed info.")
 
     async def report_alert(self, zipcode, date, func=myprint):
 
@@ -166,8 +165,7 @@ class ParseForecast:
 
         if self.hazard_flag is True:
             await func("There is a " + self.hazard_type + " " + self.hazard_pheno + " hazard " +
-                       self.hazard_sign + " in your area.")
-            await func("visit " + self.hazard_url + " for detailed info.")
+                       self.hazard_sign + " in your area. Visit " + self.hazard_url + " for detailed info.")
 
         curr_date = dt.date(year=int(date[0:4]), month=int(date[5:7]), day=int(date[8:10]))
         delta = dt.timedelta(days=1)
