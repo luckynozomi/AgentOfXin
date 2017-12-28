@@ -7,6 +7,12 @@ import os
 import errno
 
 
+FILE_PATH = os.path.abspath(__file__)
+CURR_DIR_PATH, _ = os.path.split(FILE_PATH)
+DIR_PATH, _ = os.path.split(CURR_DIR_PATH)
+print(DIR_PATH)
+
+
 def make_sure_path_exists(path):
     try:
         os.makedirs(path)
@@ -94,7 +100,7 @@ class TimeAndZip:
 
     async def fetch_forecast(self, trials=5):
 
-        path = "WeatherForecast/log/" + self.zipcode + "/"
+        path = DIR_PATH + "/WeatherForecast/log/" + self.zipcode + "/"
 
         if os.path.isfile(path + self.datetime.date().isoformat()) is True:
 
@@ -170,7 +176,7 @@ class ParseForecast:
         curr_date = dt.date(year=int(date[0:4]), month=int(date[5:7]), day=int(date[8:10]))
         delta = dt.timedelta(days=1)
         old_date = curr_date - delta
-        path = "WeatherForecast/log/" + zipcode + "/"
+        path = DIR_PATH + "/WeatherForecast/log/" + zipcode + "/"
 
         if os.path.isfile(path + old_date.isoformat()) is True:
             f = open(path + old_date.isoformat(), 'r')
