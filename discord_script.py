@@ -45,17 +45,10 @@ async def check_weather_daily():
         forecast = ParseForecast(xml=xml)
         await forecast.report(zipcode=curr_time_and_zip.zipcode, date=curr_time_and_zip.datetime.date().isoformat(),
                               func=printdiscord)
+        await forecast.report_alert(zipcode=curr_time_and_zip.zipcode,
+                                    date=curr_time_and_zip.datetime.date().isoformat(),
+                                    func=printdiscord)
         next_time_and_zip = curr_time_and_zip.day_lapse(day_delta=1)
-
-        path = "WeatherForecast/log/" + curr_time_and_zip.zipcode + "/"
-        yesterday_xml = path + curr_time_and_zip.day_lapse(day_delta=-1).datetime.date().isoformat()
-        if os.path.isfile(yesterday_xml) is True:
-            f = open(yesterday_xml, 'r')
-            xml_old = f.read()
-            f.close()
-            forecast_old = ParseForecast(xml_old)
-            alert = ForecastAlert(forecast, forecast_old)
-            await alert.report(func=printdiscord)
 
 
 @client.event

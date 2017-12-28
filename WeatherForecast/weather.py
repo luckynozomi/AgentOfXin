@@ -123,6 +123,8 @@ class ParseForecast:
 
         """
 
+        self.xml = xml
+
         vals = parseString(xml)
 
         temp = vals.getElementsByTagName("value")
@@ -157,7 +159,7 @@ class ParseForecast:
                        " in your area.")
             await func("visit" + self.hazard_url + "for detailed info.")
 
-    async def report_alert(self, func=myprint):
+    async def report_alert(self, zipcode, date, func=myprint):
 
         if self.precipitation > 40:
             await func("Today's chance of precipitation is " + str(self.precipitation) + "%. Please beware!")
@@ -167,52 +169,45 @@ class ParseForecast:
                        self.hazard_sign + " in your area.")
             await func("visit " + self.hazard_url + " for detailed info.")
 
+        curr_date = dt.date(year=int(date[0:4]), month=int(date[5:7]), day=int(date[8:10]))
+        delta = dt.timedelta(days=1)
+        old_date = curr_date - delta
+        path = "WeatherForecast/log/" + zipcode + "/"
 
-class ForecastAlert:
+        if os.path.isfile(path + old_date.isoformat()) is True:
+            f = open(path + old_date.isoformat(), 'r')
+            xml_past = f.read()
+            f.close()
 
-    def __init__(self, forecast_now, forecast_past):
+            forecast_past = ParseForecast(xml_past)
 
-        self.forecast_now = forecast_now
-        self.forecast_past = forecast_past
+            if self.high_temp - 10.0 > forecast_past.high_temp or \
+                    self.low_temp - 10.0 > forecast_past.low_temp:
+                temp_alert = "warmer"
+            elif self.high_temp + 10.0 < forecast_past.high_temp or \
+                    self.low_temp + 10.0 < forecast_past.low_temp:
+                temp_alert = "colder"
+            else:
+                temp_alert = "None"
 
-        if self.forecast_now.high_temp - 10.0 > self.forecast_past.high_temp or \
-                self.forecast_now.low_temp - 10.0 > self.forecast_past.low_temp:
-            self.temp_alert = "warmer"
-        elif self.forecast_now.high_temp + 10.0 < self.forecast_past.high_temp or \
-                self.forecast_now.low_temp + 10.0 < self.forecast_past.low_temp:
-            self.temp_alert = "colder"
-        else:
-            self.temp_alert = "None"
-
-    async def report(self, func=myprint):
-
-        if self.temp_alert != "None":
-            await func("Today's temperature is " + str(self.forecast_now.low_temp) + " to " +
-                       str(self.forecast_now.high_temp) + " degrees F, and is much " + self.temp_alert +
-                       " than yesterday.")
-
-        await self.forecast_now.report_alert(func=func)
+            if temp_alert != "None":
+                await func("Today's temperature is " + str(self.low_temp) + " to " +
+                           str(self.high_temp) + " degrees F, which is much " + temp_alert +
+                           " than yesterday.")
 
 
 async def main():
 
+    zipcode = '32304'
+
     current_datetime = datetime.now()
-
-    time_and_zipp = TimeAndZip(current_datetime).day_lapse(day_delta=1)
-
+    time_and_zipp = TimeAndZip(zipcode=zipcode, datetime=current_datetime).day_lapse(day_delta=0)
     xml = await time_and_zipp.fetch_forecast()
 
     forecast = ParseForecast(xml=xml)
+    # await forecast.report(zipcode=zipcode, date=current_datetime.date().isoformat())
+    await forecast.report_alert(zipcode=zipcode, date=current_datetime.date().isoformat())
 
-    # await forecast.report(zipcode='32304', date=current_datetime.date().isoformat())
-
-    dir = "WeatherForecast/log/32304/"
-    f = open(dir + time_and_zipp.day_lapse(day_delta=-1).datetime.date().isoformat(), 'r')
-    forecast_old = ParseForecast(f.read())
-    f.close()
-
-    alert = ForecastAlert(forecast, forecast_old)
-    await alert.report()
 
 if __name__ == "__main__":
 
