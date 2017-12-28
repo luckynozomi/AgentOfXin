@@ -190,8 +190,8 @@ class ParseForecast:
 
             if temp_alert != "None":
                 await func("Today's temperature is " + str(self.low_temp) + " to " +
-                           str(self.high_temp) + " degrees F, which is much " + temp_alert +
-                           " than yesterday.")
+                           str(self.high_temp) + " degrees F. It is much " + temp_alert +
+                           " than yesterday!")
 
 
 async def main():

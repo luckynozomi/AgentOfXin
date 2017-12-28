@@ -37,8 +37,7 @@ async def check_weather_daily():
     while True:
 
         timedelta = next_time_and_zip.datetime - curr_time_and_zip.datetime
-
-        # await asyncio.sleep(timedelta.total_seconds())
+        await asyncio.sleep(timedelta.total_seconds())
 
         curr_time_and_zip = next_time_and_zip
 
@@ -50,8 +49,6 @@ async def check_weather_daily():
                                     date=curr_time_and_zip.datetime.date().isoformat(),
                                     func=twitter_update_status)
         next_time_and_zip = curr_time_and_zip.day_lapse(day_delta=1)
-
-        await asyncio.sleep(4564652)
 
 
 @client.event
