@@ -20,6 +20,11 @@ async def fetch(session, url):
         return response.status, await response.text()
 
 
+async def myprint(*args):
+    print(*args)
+    return 0
+
+
 class TimeAndZip:
 
     def __init__(self, datetime=datetime.now(), duration=dt.timedelta(hours=12), zipcode='32304'):
@@ -96,12 +101,10 @@ class TimeAndZip:
             f = open(path + self.datetime.date().isoformat(), 'r')
             forecast = f.read()
             f.close()
-            print("Opened File.")
 
         else:
 
             forecast = await self._dl_forecast(trials=trials)
-            print("Downloaded file.")
 
             make_sure_path_exists(path)
             f = open(path + self.datetime.date().isoformat(), 'w')
@@ -111,7 +114,7 @@ class TimeAndZip:
         return forecast
 
 
-class WeatherForecast:
+class ParseForecast:
 
     def __init__(self, xml):
         """
@@ -143,41 +146,73 @@ class WeatherForecast:
 
         vals.unlink()
 
-    async def report(self, zipcode, date, func=print):
+    async def report(self, zipcode, date, func=myprint):
 
         await func("On " + date + " in " + zipcode + ", low temp is " + str(self.low_temp) +
                    " degrees F, high temp is " + str(self.high_temp) + " degrees F, with a " + str(self.precipitation) +
                    "% chance of precipitation.")
 
         if self.hazard_flag is True:
-            print("There is a " + self.hazard_type + " " + self.hazard_pheno + " hazard " + self.hazard_sign +
-                  " in your area.")
-            print("visit" + self.hazard_url + "for detailed info.")
+            await func("There is a " + self.hazard_type + " " + self.hazard_pheno + " hazard " + self.hazard_sign +
+                       " in your area.")
+            await func("visit" + self.hazard_url + "for detailed info.")
+
+    async def report_alert(self, func=myprint):
+
+        if self.precipitation > 40:
+            await func("Today's chance of precipitation is " + str(self.precipitation) + "%. Please beware!")
+
+        if self.hazard_flag is True:
+            await func("There is a " + self.hazard_type + " " + self.hazard_pheno + " hazard " +
+                       self.hazard_sign + " in your area.")
+            await func("visit " + self.hazard_url + " for detailed info.")
 
 
-async def temp_alert(weather_past, weather_now):
+class ForecastAlert:
 
-    if weather_now.high_temp - 10.0 > weather_past.high_temp or weather_now.low_temp - 10.0 > weather_past.low_temp:
-        alert = "warmer"
-    elif weather_now.high_temp + 10.0 < weather_past.high_temp or weather_now.low_temp + 10.0 < weather_past.low_temp:
-        alert = "cooler"
-    else:
-        alert = "None"
+    def __init__(self, forecast_now, forecast_past):
 
-    return alert
+        self.forecast_now = forecast_now
+        self.forecast_past = forecast_past
+
+        if self.forecast_now.high_temp - 10.0 > self.forecast_past.high_temp or \
+                self.forecast_now.low_temp - 10.0 > self.forecast_past.low_temp:
+            self.temp_alert = "warmer"
+        elif self.forecast_now.high_temp + 10.0 < self.forecast_past.high_temp or \
+                self.forecast_now.low_temp + 10.0 < self.forecast_past.low_temp:
+            self.temp_alert = "colder"
+        else:
+            self.temp_alert = "None"
+
+    async def report(self, func=myprint):
+
+        if self.temp_alert != "None":
+            await func("Today's temperature is " + str(self.forecast_now.low_temp) + " to " +
+                       str(self.forecast_now.high_temp) + " degrees F, and is much " + self.temp_alert +
+                       " than yesterday.")
+
+        await self.forecast_now.report_alert(func=func)
 
 
 async def main():
 
     current_datetime = datetime.now()
 
-    time_and_zipp = TimeAndZip(current_datetime)
+    time_and_zipp = TimeAndZip(current_datetime).day_lapse(day_delta=1)
 
     xml = await time_and_zipp.fetch_forecast()
 
-    forecast = WeatherForecast(xml=xml)
+    forecast = ParseForecast(xml=xml)
 
-    await forecast.report(zipcode='32304', date=current_datetime.date().isoformat())
+    # await forecast.report(zipcode='32304', date=current_datetime.date().isoformat())
+
+    dir = "WeatherForecast/log/32304/"
+    f = open(dir + time_and_zipp.day_lapse(day_delta=-1).datetime.date().isoformat(), 'r')
+    forecast_old = ParseForecast(f.read())
+    f.close()
+
+    alert = ForecastAlert(forecast, forecast_old)
+    await alert.report()
 
 if __name__ == "__main__":
 
