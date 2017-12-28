@@ -13,7 +13,7 @@ from datetime import datetime
 import time, sys, os, subprocess
 import matplotlib.pyplot as plt
 
-dir_path = os.path.abspath("CPUTempMon")
+DIR_PATH, _ = os.path.split(os.path.abspath(__file__))
 
 time_delta = float(sys.argv[1])
 check_per_day = int(24 * 60 / time_delta)
@@ -41,7 +41,7 @@ while 1:
         plt.xticks(x, time_all_day, rotation='vertical')
         plt.plot(x, temp_all_day)
         plt_name = "CPU Temp on " + current_datetime.strftime('%b') + " " + str(current_datetime.day) + ".png"
-        plt.savefig(dir_path + "/Data/" + plt_name)
+        plt.savefig(DIR_PATH + "/Data/" + plt_name)
         plt.close()
 
         checks = 0
