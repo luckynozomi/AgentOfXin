@@ -125,16 +125,17 @@ class TimeAndZip:
 
         return forecast
 
-    async def fetch_forecast(self, trials=5):
+    async def fetch_forecast(self, trials=10, replace=True):
         """
         If the requested forecast already exists, then open it; otherwise fetch it from the internet and save it.
         :param trials: number of maximum trials to connect to server.
+        :param replace: replaces the existing XML file (weather forecast changes over time!)
         :return: forecast XML file
         """
 
         path = DIR_PATH + "/WeatherForecast/log/" + self.zipcode + "/"
 
-        if os.path.isfile(path + self.datetime.date().isoformat()) is True:
+        if os.path.isfile(path + self.datetime.date().isoformat()) is True and replace is False:
 
             f = open(path + self.datetime.date().isoformat(), 'r')
             forecast = f.read()
