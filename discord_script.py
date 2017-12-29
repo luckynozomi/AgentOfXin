@@ -9,7 +9,6 @@ from WeatherForecast.tweet_alert import *
 
 # set up discord
 client = commands.Bot(command_prefix='!')
-CHANNEL = client.get_channel('354808585374531604')
 
 # set up logging
 logger = logging.getLogger('discord')
@@ -26,7 +25,7 @@ def get_channel(client, channel_name):
     return None
 
 
-async def printdiscord(string, channel='general'):
+async def print_discord(string, channel='general'):
     dest_channel = get_channel(client, channel)
     await client.send_message(dest_channel, string)
     return 0
@@ -59,7 +58,7 @@ async def check_weather_daily():
         xml = await curr_time_and_zip.fetch_forecast()
         forecast = ParseForecast(xml=xml)
         await forecast.report(zipcode=curr_time_and_zip.zipcode, date=curr_time_and_zip.datetime.date().isoformat(),
-                              func=printdiscord)
+                              func=print_discord)
         await forecast.report_alert(zipcode=curr_time_and_zip.zipcode,
                                     date=curr_time_and_zip.datetime.date().isoformat(),
                                     func=twitter_update_status)
@@ -76,22 +75,22 @@ async def on_ready():
 @client.command()
 async def hello():
 
-    await printdiscord("Hello")
+    await print_discord("Hello")
 
 
 @client.command()
 async def exe(*args):
 
     try:
-        await printdiscord(subprocess.check_output(args))
+        await print_discord(subprocess.check_output(args))
     except:
-        await printdiscord("Error: " + str(sys.exc_info()[0]))
+        await print_discord("Error: " + str(sys.exc_info()[0]))
 
 
 @client.command()
 async def temp():
 
-    await printdiscord(subprocess.check_output(["vcgencmd", "measure_temp"]))
+    await print_discord(subprocess.check_output(["vcgencmd", "measure_temp"]))
 
 
 @client.command()
@@ -100,7 +99,7 @@ async def log(*args):
     arg = args[0]
     if arg == 'temp':
         f = open('nohup.out')
-        await printdiscord(f.read())
+        await print_discord(f.read())
         f.close()
 
 
@@ -119,7 +118,7 @@ async def weather(*args):
     time_and_zip = TimeAndZip(zipcode=args[0]).day_lapse(day_delta=day_delta)
     xml = await time_and_zip.fetch_forecast()
     forecast = ParseForecast(xml=xml)
-    await forecast.report(zipcode=args[0], date=time_and_zip.datetime.date().isoformat(), func=printdiscord)
+    await forecast.report(zipcode=args[0], date=time_and_zip.datetime.date().isoformat(), func=print_discord)
 
 client.loop.create_task(check_weather_daily())
 client.run(TOKEN)

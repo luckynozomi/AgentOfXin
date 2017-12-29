@@ -159,6 +159,7 @@ class ParseForecast:
         """
         Parses forecast XML file to obtain data of our interest.
         :param xml: XML file
+        :TODO: redo XML parsing on hazard data. Current code only returns hazard condition at 8 A.M..
         """
 
         self.xml = xml
