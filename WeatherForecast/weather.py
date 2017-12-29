@@ -1,3 +1,15 @@
+"""
+
+Weather forecast is requested from NDFD REST web service,
+url = https://graphical.weather.gov/xml/rest.php,
+and is stored locally at WeatherForecast/log/zip_code/date.
+
+The service we use partitions the request time into segments from 7 A.M. - 7 P.M. and 7 P.M. - 7 A.M. next day.
+To simplify task, only the request of 7 A.M. - 7 P.M. is implemented in this file.
+
+"""
+
+
 from xml.dom.minidom import parseString
 from datetime import datetime
 import datetime as dt
@@ -7,6 +19,7 @@ import os
 import errno
 
 
+# get DIR_PATH, the absolute path to AgentOfXin folder ("..." + "/AgentOfXin")
 FILE_PATH = os.path.abspath(__file__)
 CURR_DIR_PATH, _ = os.path.split(FILE_PATH)
 DIR_PATH, _ = os.path.split(CURR_DIR_PATH)
@@ -14,6 +27,11 @@ print(DIR_PATH)
 
 
 def make_sure_path_exists(path):
+    """
+    If path does not exist, then create it
+    :param path: string
+    :return: None
+    """
     try:
         os.makedirs(path)
     except OSError as exception:
@@ -22,11 +40,22 @@ def make_sure_path_exists(path):
 
 
 async def fetch(session, url):
+    """
+    Fetch data from the URL given
+    :param session: object created by aiohttp.ClientSession()
+    :param url: string
+    :return: server response status and web content (xml file in our case)
+    """
     async with session.get(url) as response:
         return response.status, await response.text()
 
 
 async def myprint(*args):
+    """
+    An print function wrapper so that it works with await
+    :param args: args to pass to print()
+    :return: 0
+    """
     print(*args)
     return 0
 
@@ -52,9 +81,8 @@ class TimeAndZip:
 
     def get_url(self):
         """
-
+        generates the weather forecast URL.
         :return: string
-
         """
 
         url = "https://graphical.weather.gov" + \
@@ -67,7 +95,6 @@ class TimeAndZip:
 
     def day_lapse(self, day_delta=0):
         """
-
         :param day_delta: int
         :return: TimeAndZip object whose time is X days after today at 7 AM.
         """
@@ -80,7 +107,7 @@ class TimeAndZip:
 
     async def _dl_forecast(self, trials=5):
         """
-
+        make server requests to get forecast XML file
         :param trials: int
         :return: forecast XML file
         """
@@ -99,6 +126,11 @@ class TimeAndZip:
         return forecast
 
     async def fetch_forecast(self, trials=5):
+        """
+        If the requested forecast already exists, then open it; otherwise fetch it from the internet and save it.
+        :param trials: number of maximum trials to connect to server.
+        :return: forecast XML file
+        """
 
         path = DIR_PATH + "/WeatherForecast/log/" + self.zipcode + "/"
 
@@ -124,9 +156,8 @@ class ParseForecast:
 
     def __init__(self, xml):
         """
-
-        :param xml: xml file containing weather forecast
-
+        Parses forecast XML file to obtain data of our interest.
+        :param xml: XML file
         """
 
         self.xml = xml
@@ -155,6 +186,13 @@ class ParseForecast:
         vals.unlink()
 
     async def report(self, zipcode, date, func=myprint):
+        """
+        Reports weather condition using func(e.g., print()).
+        :param zipcode: 5-digit string
+        :param date: isoformat string
+        :param func: function
+        :return: None
+        """
 
         await func("On " + date + " in " + zipcode + ", low temp is " + str(self.low_temp) +
                    " degrees F, high temp is " + str(self.high_temp) + " degrees F, with a " + str(self.precipitation) +
@@ -165,6 +203,18 @@ class ParseForecast:
                        " in your area. Visit " + self.hazard_url + "for detailed info.")
 
     async def report_alert(self, zipcode, date, func=myprint):
+        """
+        Reports if the weather today is worthy an alert:
+            1) more than 10°F colder/warmer than yesterday;
+            OR
+            2) has a >40% chance of precipitation;
+            OR
+            3) a Weather Advisory/Warning/Watch is issued.
+        :param zipcode: 5-digit string
+        :param date: isoformat string
+        :param func: function
+        :return: None
+        """
 
         if self.precipitation > 40:
             await func("Today's chance of precipitation is " + str(self.precipitation) + "%. Please beware!")
