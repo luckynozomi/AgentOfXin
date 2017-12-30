@@ -10,9 +10,15 @@ import sys
 import asyncio
 import youtube_dl
 # import opuslib
+import os
 
 # set up discord
 client = commands.Bot(command_prefix='!')
+
+
+# get DIR_PATH, the absolute path to AgentOfXin folder ("..." + "/AgentOfXin")
+FILE_PATH = os.path.abspath(__file__)
+DIR_PATH, _ = os.path.split(FILE_PATH)
 
 
 def get_channel(client, channel_name):
@@ -42,7 +48,12 @@ async def play():
         await print_discord("Bot joined voice channel " + channel_name + " successfully.", channel='general')
 
         url = 'https://www.youtube.com/watch?v=TbdZiu3Rarw'
-        player = await voice_client.create_ytdl_player(url=url, use_avconv=True)
+
+        options = {"-f": "bestaudio"}
+
+        voice_client.encoder_options(sample_rate=48000)
+        # player = await voice_client.create_ytdl_player(url=url, ytdl_options=options)
+        player = voice_client.create_ffmpeg_player(DIR_PATH + '/t.mp3')
         player.start()
 
 client.run(TOKEN)

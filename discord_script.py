@@ -116,6 +116,7 @@ async def weather(*args):
         day_delta = 0
 
     time_and_zip = TimeAndZip(zipcode=args[0]).day_lapse(day_delta=day_delta)
+    await client.say(time_and_zip.datetime.isoformat())     # debug use
     xml = await time_and_zip.fetch_forecast()
     forecast = ParseForecast(xml=xml)
     await forecast.report(zipcode=args[0], date=time_and_zip.datetime.date().isoformat(), func=print_discord)
