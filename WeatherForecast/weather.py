@@ -62,22 +62,22 @@ async def myprint(*args):
 
 class TimeAndZip:
 
-    def __init__(self, datetime=datetime.now(), duration=dt.timedelta(hours=12), zipcode='32304'):
+    def __init__(self, datetime_=datetime.now(), duration=dt.timedelta(hours=12), zip_code='32304'):
         """
 
-        :param datetime:  datetime object
+        :param datetime_:  datetime object
         :param duration:  timedelta object
-        :param zipcode:   5-digit string
+        :param zip_code:   5-digit string
         """
 
-        self.datetime = datetime
+        self.datetime = datetime_
         self.duration = duration
-        self._datetime_end = datetime + duration
+        self._datetime_end = datetime_ + duration
 
-        if len(zipcode) != 5 or zipcode.isalnum() is False:
+        if len(zip_code) != 5 or zip_code.isalnum() is False:
             raise ValueError
 
-        self.zipcode = zipcode
+        self.zip_code = zip_code
 
     def get_url(self):
         """
@@ -86,7 +86,7 @@ class TimeAndZip:
         """
 
         url = "https://graphical.weather.gov" + \
-              "/xml/sample_products/browser_interface/ndfdXMLclient.php?zipCodeList=" + self.zipcode + \
+              "/xml/sample_products/browser_interface/ndfdXMLclient.php?zipCodeList=" + self.zip_code + \
               "&product=time-series&begin=" + self.datetime.isoformat() + "&end=" + \
               self._datetime_end.isoformat() + "&maxt=maxt&mint=mint&pop12=pop12&wwa=wwa"
 
@@ -103,7 +103,7 @@ class TimeAndZip:
 
         forecast_datetime = forecast_datetime.replace(hour=7, minute=0, second=0, microsecond=0)
 
-        return TimeAndZip(datetime=forecast_datetime, zipcode=self.zipcode)
+        return TimeAndZip(datetime_=forecast_datetime, zip_code=self.zip_code)
 
     async def _dl_forecast(self, trials=5):
         """
@@ -133,7 +133,7 @@ class TimeAndZip:
         :return: forecast XML file
         """
 
-        path = DIR_PATH + "/WeatherForecast/log/" + self.zipcode + "/"
+        path = DIR_PATH + "/WeatherForecast/log/" + self.zip_code + "/"
 
         if os.path.isfile(path + self.datetime.date().isoformat()) is True and replace is False:
 
@@ -187,16 +187,16 @@ class ParseForecast:
 
         vals.unlink()
 
-    async def report(self, zipcode, date, func=myprint):
+    async def report(self, zip_code, date, func=myprint):
         """
         Reports weather condition using func(e.g., print()).
-        :param zipcode: 5-digit string
+        :param zip_code: 5-digit string
         :param date: isoformat string
         :param func: function
         :return: None
         """
 
-        await func("On " + date + " in " + zipcode + ", low temp is " + str(self.low_temp) +
+        await func("On " + date + " in " + zip_code + ", low temp is " + str(self.low_temp) +
                    " degrees F, high temp is " + str(self.high_temp) + " degrees F, with a " + str(self.precipitation) +
                    "% chance of precipitation.")
 
@@ -204,7 +204,7 @@ class ParseForecast:
             await func("There is a " + self.hazard_type + " " + self.hazard_pheno + " hazard " + self.hazard_sign +
                        " in your area. Visit " + self.hazard_url + "for detailed info.")
 
-    async def report_alert(self, zipcode, date, func=myprint):
+    async def report_alert(self, zip_code, date, func=myprint):
         """
         Reports if the weather today is worthy an alert:
             1) more than 10°F colder/warmer than yesterday;
@@ -212,7 +212,7 @@ class ParseForecast:
             2) has a >40% chance of precipitation;
             OR
             3) a Weather Advisory/Warning/Watch is issued.
-        :param zipcode: 5-digit string
+        :param zip_code: 5-digit string
         :param date: isoformat string
         :param func: function
         :return: None
@@ -228,7 +228,7 @@ class ParseForecast:
         curr_date = dt.date(year=int(date[0:4]), month=int(date[5:7]), day=int(date[8:10]))
         delta = dt.timedelta(days=1)
         old_date = curr_date - delta
-        path = DIR_PATH + "/WeatherForecast/log/" + zipcode + "/"
+        path = DIR_PATH + "/WeatherForecast/log/" + zip_code + "/"
 
         if os.path.isfile(path + old_date.isoformat()) is True:
             f = open(path + old_date.isoformat(), 'r')
@@ -254,15 +254,15 @@ class ParseForecast:
 
 async def main():
 
-    zipcode = '32304'
+    zip_code = '32304'
 
     current_datetime = datetime.now()
-    time_and_zipp = TimeAndZip(zipcode=zipcode, datetime=current_datetime).day_lapse(day_delta=0)
+    time_and_zipp = TimeAndZip(zip_code=zip_code, datetime_=current_datetime).day_lapse(day_delta=0)
     xml = await time_and_zipp.fetch_forecast()
 
     forecast = ParseForecast(xml=xml)
-    # await forecast.report(zipcode=zipcode, date=current_datetime.date().isoformat())
-    await forecast.report_alert(zipcode=zipcode, date=current_datetime.date().isoformat())
+    # await forecast.report(zip_code=zip_code, date=current_datetime.date().isoformat())
+    await forecast.report_alert(zip_code=zip_code, date=current_datetime.date().isoformat())
 
 
 if __name__ == "__main__":

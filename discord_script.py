@@ -1,7 +1,6 @@
 from discord.ext import commands
 from discord_token import *
 import subprocess
-import sys
 import logging
 
 from WeatherForecast.weather import *
@@ -18,8 +17,8 @@ handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(me
 logger.addHandler(handler)
 
 
-def get_channel(client, channel_name):
-    for channel in client.get_all_channels():
+def get_channel(client_, channel_name):
+    for channel in client_.get_all_channels():
         if channel.name == channel_name:
             return channel
     return None
@@ -57,9 +56,9 @@ async def check_weather_daily():
 
         xml = await curr_time_and_zip.fetch_forecast()
         forecast = ParseForecast(xml=xml)
-        await forecast.report(zipcode=curr_time_and_zip.zipcode, date=curr_time_and_zip.datetime.date().isoformat(),
+        await forecast.report(zip_code=curr_time_and_zip.zip_code, date=curr_time_and_zip.datetime.date().isoformat(),
                               func=print_discord)
-        await forecast.report_alert(zipcode=curr_time_and_zip.zipcode,
+        await forecast.report_alert(zip_code=curr_time_and_zip.zip_code,
                                     date=curr_time_and_zip.datetime.date().isoformat(),
                                     func=twitter_update_status)
         next_time_and_zip = curr_time_and_zip.day_lapse(day_delta=1)
@@ -76,15 +75,6 @@ async def on_ready():
 async def hello():
 
     await print_discord("Hello")
-
-
-@client.command()
-async def exe(*args):
-
-    try:
-        await print_discord(subprocess.check_output(args))
-    except:
-        await print_discord("Error: " + str(sys.exc_info()[0]))
 
 
 @client.command()
@@ -106,20 +96,21 @@ async def log(*args):
 @client.command()
 async def weather(*args):
     """
-    Command !weather zip_code returns the weather forecast in (zipcode) in today(if it's before 7 P.M.) or tomorrow
+    Command !weather zip_code returns the weather forecast in (zip_code) in today(if it's before 7 P.M.) or tomorrow
     (if it's after 7 P.M.)
-    :param args: zipcode
+    :param args: zip_code
     :return: none
     """
     day_delta = 1
-    if datetime.now().hour < 19:
+    dt_now = datetime.now()
+    if dt_now.hour < 19:
         day_delta = 0
 
-    time_and_zip = TimeAndZip(zipcode=args[0]).day_lapse(day_delta=day_delta)
-    await client.say(time_and_zip.datetime.isoformat())     # debug use
+    time_and_zip = TimeAndZip(datetime_=dt_now, zip_code=args[0]).day_lapse(day_delta=day_delta)
+    await client.say(dt_now.isoformat())     # debug use
     xml = await time_and_zip.fetch_forecast()
     forecast = ParseForecast(xml=xml)
-    await forecast.report(zipcode=args[0], date=time_and_zip.datetime.date().isoformat(), func=print_discord)
+    await forecast.report(zip_code=args[0], date=time_and_zip.datetime.date().isoformat(), func=print_discord)
 
 client.loop.create_task(check_weather_daily())
 client.run(TOKEN)
