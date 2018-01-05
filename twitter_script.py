@@ -31,7 +31,7 @@ async def main(zip_code='32304', debug=False):
         print_func = myprint
 
     curr_time_and_zip = TimeAndZip(datetime_=datetime.now(), zip_code=zip_code)
-    time_and_zip = curr_time_and_zip.day_lapse(day_delta=1)
+    time_and_zip = curr_time_and_zip.day_lapse(day_delta=0)
     xml = await time_and_zip.fetch_forecast()
     forecast = ParseForecast(xml=xml)
     await forecast.report_alert(zip_code=curr_time_and_zip.zip_code,
