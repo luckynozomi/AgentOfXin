@@ -31,7 +31,8 @@ async def main(zip_code='32304', debug=False):
         print_func = myprint
 
     curr_time_and_zip = TimeAndZip(datetime_=datetime.now(), zip_code=zip_code)
-    xml = await curr_time_and_zip.fetch_forecast()
+    time_and_zip = curr_time_and_zip.day_lapse(day_delta=1)
+    xml = await time_and_zip.fetch_forecast()
     forecast = ParseForecast(xml=xml)
     await forecast.report_alert(zip_code=curr_time_and_zip.zip_code,
                                 date=curr_time_and_zip.datetime.date().isoformat(),
@@ -40,4 +41,4 @@ async def main(zip_code='32304', debug=False):
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main(zip_code='32304', debug=True))
+    loop.run_until_complete(main(zip_code='32304', debug=False))
